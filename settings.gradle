@@ -1,0 +1,2 @@
+rootProject.name = "FloatingVolume"
+include ':app'
