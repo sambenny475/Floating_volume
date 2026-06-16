@@ -34,8 +34,12 @@ jobs:
           convert -size 96x96 xc:'#1A1A2E' -fill '#00D4FF' -draw "circle 48,48 48,14" app/src/main/res/mipmap-xhdpi/ic_launcher.png
           convert -size 144x144 xc:'#1A1A2E' -fill '#00D4FF' -draw "circle 72,72 72,20" app/src/main/res/mipmap-xxhdpi/ic_launcher.png
 
-      - name: Grant Gradle execute permission
-        run: chmod +x gradlew
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Build Release APK
+        run: gradle assembleRelease
+        working-directory: .
 
       - name: Build Release APK
         run: ./gradlew assembleRelease
