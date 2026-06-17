@@ -37,6 +37,9 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
+      - name : Grand execute premission to gradlew
+        run: chmod +x gradlew
+
       - name: Build Release APK
         run: ./gradlew assembleRelease
 
