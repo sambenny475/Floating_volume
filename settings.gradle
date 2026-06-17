@@ -1,2 +1,11 @@
-rootProject.name = "FloatingVolume"
-include ':app'
+dependencyResolutionManagement {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}dependencyResolutionManagement {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
