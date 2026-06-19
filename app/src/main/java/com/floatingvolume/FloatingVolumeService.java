@@ -49,7 +49,9 @@ public class FloatingVolumeService extends Service {
         params.x = 30;
         params.y = 300;
 
-        windowManager.addView(knobView, params);
+        if (windowManager != null) {
+            windowManager.addView(knobView, params);
+        }
 
         // Start hidden — show a small dot
         knobView.setExpanded(false);
@@ -84,7 +86,7 @@ public class FloatingVolumeService extends Service {
                     if (Math.abs(dx) > 8 || Math.abs(dy) > 8) {
                         isDragging[0] = true;
                     }
-                    if (isDragging[0]) {
+                    if (isDragging[0] && windowManager != null) {
                         params.x = startParamsX[0] + (int) dx;
                         params.y = startParamsY[0] + (int) dy;
                         windowManager.updateViewLayout(knobView, params);
@@ -121,11 +123,13 @@ public class FloatingVolumeService extends Service {
     }
 
     private void changeVolume(int direction) {
-        audioManager.adjustStreamVolume(
-                AudioManager.STREAM_MUSIC,
-                direction > 0 ? AudioManager.ADJUST_RAISE : AudioManager.ADJUST_LOWER,
-                0
-        );
+        if (audioManager != null) {
+            audioManager.adjustStreamVolume(
+                    AudioManager.STREAM_MUSIC,
+                    direction > 0 ? AudioManager.ADJUST_RAISE : AudioManager.ADJUST_LOWER,
+                    0
+            );
+        }
     }
 
     private void resetHideTimer() {
@@ -136,8 +140,21 @@ public class FloatingVolumeService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (knobView != null) windowManager.removeView(knobView);
-        handler.removeCallbacks(hideRunnable);
+        // Clean up handler to prevent memory leaks
+        if (handler != null) {
+            handler.removeCallbacks(hideRunnable);
+        }
+        // Safe removal of view with null checks
+        if (knobView != null && windowManager != null) {
+            try {
+                windowManager.removeView(knobView);
+            } catch (IllegalArgumentException e) {
+                // View already removed or service already destroyed
+            }
+        }
+        knobView = null;
+        windowManager = null;
+        handler = null;
     }
 
     // ─── Inner View ────────────────────────────────────────────────
@@ -200,21 +217,23 @@ public class FloatingVolumeService extends Service {
                 canvas.drawCircle(cx, cy, cx - 4, knobPaint);
 
                 // Volume arc
-                int maxVol = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-                int curVol = am.getStreamVolume(AudioManager.STREAM_MUSIC);
-                float percent = (float) curVol / maxVol;
-                float sweep = percent * 270f;
-                RectF oval = new RectF(12, 12, w - 12, h - 12);
-                // Background arc (dim)
-                arcPaint.setColor(Color.parseColor("#44FFFFFF"));
-                canvas.drawArc(oval, 135, 270, false, arcPaint);
-                // Foreground arc (cyan)
-                arcPaint.setColor(Color.parseColor("#FF00D4FF"));
-                canvas.drawArc(oval, 135, sweep, false, arcPaint);
+                if (am != null) {
+                    int maxVol = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+                    int curVol = am.getStreamVolume(AudioManager.STREAM_MUSIC);
+                    float percent = maxVol > 0 ? (float) curVol / maxVol : 0;
+                    float sweep = percent * 270f;
+                    RectF oval = new RectF(12, 12, w - 12, h - 12);
+                    // Background arc (dim)
+                    arcPaint.setColor(Color.parseColor("#44FFFFFF"));
+                    canvas.drawArc(oval, 135, 270, false, arcPaint);
+                    // Foreground arc (cyan)
+                    arcPaint.setColor(Color.parseColor("#FF00D4FF"));
+                    canvas.drawArc(oval, 135, sweep, false, arcPaint);
 
-                // Volume % text
-                int volPercent = (int)(percent * 100);
-                canvas.drawText(volPercent + "%", cx, cy + 8, textPaint);
+                    // Volume % text
+                    int volPercent = (int)(percent * 100);
+                    canvas.drawText(volPercent + "%", cx, cy + 8, textPaint);
+                }
 
                 // Up/down hint arrows
                 arrowPaint.setTextSize(13f);
