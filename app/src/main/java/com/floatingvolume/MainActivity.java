@@ -1,6 +1,5 @@
 package com.floatingvolume;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -9,8 +8,9 @@ import android.widget.Button;
 import android.widget.TextView;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AppCompatActivity;
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
 
     private ActivityResultLauncher<Intent> permissionLauncher;
     private TextView statusView;
@@ -31,8 +31,7 @@ public class MainActivity extends Activity {
                         startFloatingService();
                         statusView.setText("Floating knob is active!\nYou can close this screen.");
                     }
-                }
-        );
+                });
 
         // Check initial permission state
         if (Settings.canDrawOverlays(this)) {
